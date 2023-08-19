@@ -33,11 +33,13 @@ Follow the next steps to download the dataset:
 # Test
 
 <p>Command Linux Terminal or Anaconda Prompt for Resnet-18:</p> 
+
 ```python
   python resnet_18_spatial_transform.py
 ```
 
 <p>Command Linux Terminal or Anaconda Prompt for Wideresnet:</p> 
+
 ```python
   python wideresnet_spatial_transform.py
 ```
