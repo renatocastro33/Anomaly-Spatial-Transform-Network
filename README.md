@@ -35,11 +35,11 @@ Follow the next steps to download the dataset:
 <p>Command Linux Terminal or Anaconda Prompt for Resnet-18:</p> 
 
 ```python
-  python src/resnet_18_spatial_transform.py
+  execute notebooks/Baseline_MVTEC_Resnet18.ipynb
 ```
 
 <p>Command Linux Terminal or Anaconda Prompt for Wideresnet:</p> 
 
 ```python
-  python src/wideresnet_spatial_transform.py
+  execute notebooks/Baseline_MVTEC_Wide_Resnet.ipynb
 ```
