@@ -29,6 +29,7 @@ Follow the next steps to download the dataset:
 <li>Check the neccesary boxes for downloading the dataset.</li>
 <li>Click on SUBMIT AND CONTINUE TO DOWNLOAD PAGE.</li>
 <li>Click on DOWNLOAD THE WHOLE DATASET.</li>
+<li>Move the downloaded zip file to the Github directory of this project and extract it in the data folder.</li>
 
 # Test
 
