@@ -16,7 +16,6 @@ This project is based on the Github PaDiM-Anomaly-Detection-Localization-master:
   <li>Pillow</li>
   <li>Scipy</li>
   <li>Skimage</li>
-  <li>Skimage</li>
   <li>Matplotlib</li>
 
 -------------------- 
@@ -37,7 +36,7 @@ In order to test the performance of the project. You can follow the next steps t
 
 <li>Go to the link: https://drive.google.com/drive/folders/1pH3GR_9g2JMZse5gysyVmlFI0aoE_U1p?usp=drive_link</li>
 <li>Download one or both folders.</li>
-<li>Move the folder(s) to this project folder called results.</li>
+<li>Move the folder(s) to this project path called "results/mvtec_result".</li>
 
 # Test
 
