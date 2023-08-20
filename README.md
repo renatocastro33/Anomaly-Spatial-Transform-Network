@@ -31,6 +31,14 @@ Follow the next steps to download the dataset:
 <li>Click on DOWNLOAD THE WHOLE DATASET.</li>
 <li>Move the downloaded zip file to the Github directory of this project and extract it in the data folder.</li>
 
+# Downloading Trained Weights
+
+In order to test the performance of the project. You can follow the next steps to download the trained weights:
+
+<li>Go to the link: https://drive.google.com/drive/folders/1pH3GR_9g2JMZse5gysyVmlFI0aoE_U1p?usp=drive_link</li>
+<li>Download one or both folders.</li>
+<li>Move the folder(s) to this project folder called results.</li>
+
 # Test
 
 <p>Command Linux Terminal or Anaconda Prompt for Resnet-18:</p> 
