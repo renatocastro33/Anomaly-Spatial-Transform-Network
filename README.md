@@ -6,7 +6,7 @@ Anomaly detection, an essential component of industrial quality control and surv
 
 ![Padim_Spatial_Transform_Network](materials/PaDiM.png)
 
-![Padim_Spatial_Transform_Network](materials/screw_image_result.jpg)
+![Padim_Spatial_Transform_Network](materials/screw_image_result.png)
 
 # Project based On
 This project is based on the Github PaDiM-Anomaly-Detection-Localization-master: [https://github.com/xiahaifeng1995/PaDiM-Anomaly-Detection-Localization-master/tree/main]
