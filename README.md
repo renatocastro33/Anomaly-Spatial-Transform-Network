@@ -34,7 +34,7 @@ Follow the next steps to download the dataset:
 
 In order to test the performance of the project. You can follow the next steps to download the trained weights:
 
-<li>Go to the link: https://drive.google.com/drive/folders/1pH3GR_9g2JMZse5gysyVmlFI0aoE_U1p?usp=drive_link</li>
+<li>Go to the link: https://drive.google.com/drive/folders/1pH3GR_9g2JMZse5gysyVmlFI0aoE_U1p?usp=sharing</li>
 <li>Download one or both folders.</li>
 <li>Move the folder(s) to this project path called "results/mvtec_result".</li>
 
