@@ -60,7 +60,7 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
     
     for epoch in range(num_epochs):
         running_loss = 0.0
-        for inputs, _ in training_loader:
+        for inputs, _ in train_loader:
             inputs = inputs.to(device)
             optimizer.zero_grad()
             outputs = stn_model(inputs)
