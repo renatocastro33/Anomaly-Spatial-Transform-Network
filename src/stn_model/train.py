@@ -10,6 +10,8 @@ from torch.utils.data import DataLoader
 from .dataloader import MVTEC
 from .model import SpatialTransformerNetwork
 
+from itertools import islice
+
 
 train_transform = transforms.Compose([
     transforms.Resize((224, 224)),  # Resize and crop the image to 224x224
@@ -24,6 +26,30 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
     mvtec_dataset = MVTEC(root_dir=data_dir, transform = train_transform)
     train_loader = DataLoader(mvtec_dataset, batch_size=batch_size, shuffle=True)
 
+    # Define the proportion of data to use for validation
+    validation_proportion = 0.2  # Adjust as needed
+    
+    # Calculate the number of samples for validation
+    total_samples = len(train_loader.dataset)
+    num_validation_samples = int(validation_proportion * total_samples)
+    
+    # Calculate the number of samples for training
+    num_training_samples = total_samples - num_validation_samples
+    
+    # Split the train_loader into train and validation loaders
+    training_loader = torch.utils.data.DataLoader(
+        train_loader.dataset,
+        batch_size=train_loader.batch_size,
+        sampler=torch.utils.data.sampler.SubsetRandomSampler(range(num_training_samples))
+    )
+    
+    validation_loader = torch.utils.data.DataLoader(
+        train_loader.dataset,
+        batch_size=train_loader.batch_size,
+        sampler=torch.utils.data.sampler.SubsetRandomSampler(
+            range(num_training_samples, total_samples)
+        )
+    )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     stn_model = SpatialTransformerNetwork().to(device)
@@ -34,7 +60,7 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
     
     for epoch in range(num_epochs):
         running_loss = 0.0
-        for inputs, _ in train_loader:
+        for inputs, _ in training_loader:
             inputs = inputs.to(device)
             optimizer.zero_grad()
             outputs = stn_model(inputs)
@@ -42,8 +68,19 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
-            
-        print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {running_loss / len(train_loader)}")
+
+        # Validation phase
+        stn_model.eval()  # Set the model to evaluation mode
+        validation_loss = 0.0
+        with torch.no_grad():
+            for val_inputs, _ in validation_loader:
+                val_inputs = val_inputs.to(device)
+                val_outputs = stn_model(val_inputs)
+                val_loss = criterion(val_outputs, val_inputs)
+                validation_loss += val_loss.item()
+                
+        print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {running_loss / len(training_loader)}")
+        print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {validation_loss / len(validation_loader)}")
 
     print("Finished Training")
     return stn_model,train_loader
