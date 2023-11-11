@@ -35,7 +35,7 @@ class SpatialTransformerNetwork(nn.Module):
         n_size = test_output.data.view(1, -1).size(1)
         return n_size
 
-    def forward(self, x):
+    def forward(self, x,mask=None):
         xs = self.localization(x)
         xs = xs.view(-1, self.conv_output_size)
         theta = self.fc_loc(xs)
@@ -44,5 +44,8 @@ class SpatialTransformerNetwork(nn.Module):
         grid = nn.functional.affine_grid(theta, x.size())
         x = nn.functional.grid_sample(x, grid)
 
+        if mask is not None:
+            transformed_mask = nn.functional.grid_sample(mask, grid)
+            return x, transformed_mask
         return x
         

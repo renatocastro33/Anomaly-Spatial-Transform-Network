@@ -127,6 +127,8 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
     total_roc_auc = []
     total_pixel_roc_auc = []
 
+    stn_model.eval()
+    
     for class_name in CLASS_NAMES:
 
         train_dataset = MVTecDataset(CLASS_NAMES,data_path , class_name=class_name, is_train=True)
@@ -184,13 +186,14 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
 
         # extract test set features
         for (x, y, mask) in tqdm(test_dataloader, '| feature extraction | test | %s |' % class_name):
-            #x = stn_model(x)
-            test_imgs.extend(x.cpu().detach().numpy())
             gt_list.extend(y.cpu().detach().numpy())
-            gt_mask_list.extend(mask.cpu().detach().numpy())
             # model prediction
             with torch.no_grad():
+                x, mask = stn_model(x, mask)
                 _ = model(x.to(device))
+                
+            test_imgs.extend(x.cpu().detach().numpy())
+            gt_mask_list.extend(mask.cpu().detach().numpy())
             # get intermediate layer outputs
             for k, v in zip(test_outputs.keys(), outputs):
                 test_outputs[k].append(v.cpu().detach())
