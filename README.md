@@ -81,3 +81,7 @@ You can also kill a particular session using the following command:
 
 
   watch -n 1 nvidia-smi
+
+
+git remote set-url origin https://TOKEN@github.com/CristianLazoQuispe/Integrating-Spatial-Transform-Networks-with-PaDim-Architecture.git
+
