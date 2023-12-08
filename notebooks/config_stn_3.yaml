@@ -1,0 +1,17 @@
+program: train_stn_model.py
+method: grid
+parameters:
+  batch_size:
+    values: [128,64]
+  learning_rate:
+    values: [0.0000005] #0.001, 0.00001,
+  num_epochs:
+    values: [1000] # [54,27,9,3,1] 27,18,9,6,3,2,1] este debe ser un divisor de hidden_dim
+  loss_name:
+    values: [l1_mse,ssi,mse] # [64,12,8,6,4,2,1]
+  model_name:
+    values: [exp_sweep] # [128,64,32,16,4,,64,12,8,6,4,2,1] # self.transformer.decoder.num_layers
+  sweep:
+    values: [1]
+  device:
+    values: ['3']
