@@ -5,7 +5,7 @@ import torch.nn.functional as F
 class SpatialTransformerNetwork(nn.Module):
     
     def __init__(self):
-        super(SpatialTransformerNetwork, self).__init__()
+        super().__init__()
 
         self.localization = nn.Sequential(
             nn.Conv2d(3, 8, kernel_size=7),
@@ -35,7 +35,7 @@ class SpatialTransformerNetwork(nn.Module):
         n_size = test_output.data.view(1, -1).size(1)
         return n_size
 
-    def forward(self, x,mask=None):
+    def forward(self, x):
         xs = self.localization(x)
         xs = xs.view(-1, self.conv_output_size)
         theta = self.fc_loc(xs)
@@ -44,8 +44,5 @@ class SpatialTransformerNetwork(nn.Module):
         grid = nn.functional.affine_grid(theta, x.size())
         x = nn.functional.grid_sample(x, grid)
 
-        if mask is not None:
-            transformed_mask = nn.functional.grid_sample(mask, grid)
-            return x, transformed_mask
         return x
         

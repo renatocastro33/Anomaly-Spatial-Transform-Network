@@ -11,7 +11,7 @@ from .dataloader import MVTEC
 from .model import SpatialTransformerNetwork
 
 from itertools import islice
-
+import tqdm
 
 train_transform = transforms.Compose([
     transforms.Resize((224, 224)),  # Resize and crop the image to 224x224
@@ -21,11 +21,18 @@ train_transform = transforms.Compose([
     
 ])
 
+def save_model(model,model_name='../results/stn_model.pt'):
+    torch.save(model.state_dict(), model_name)
+    
+def load_model(model,model_name='../results/stn_model.pt'):
+    model.load_state_dict(torch.load(model_name))
+    model.eval()
+    return model
+
 def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_rate = 0.001,num_epochs = 10):
         
     mvtec_dataset = MVTEC(root_dir=data_dir, transform = train_transform)
     train_loader = DataLoader(mvtec_dataset, batch_size=batch_size, shuffle=True)
-
     # Define the proportion of data to use for validation
     validation_proportion = 0.2  # Adjust as needed
     
@@ -52,35 +59,64 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
     )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    stn_model = SpatialTransformerNetwork().to(device)
+
+    # Using GPU
+    print("Using GPU optimization")
+    stn_model = SpatialTransformerNetwork()
+    stn_model = nn.DataParallel(stn_model) 
+    stn_model.to("cuda")
+
     criterion = nn.MSELoss()    
     optimizer = optim.Adam(stn_model.parameters(), lr=learning_rate)
 
     print("Training ..")
     
     for epoch in range(num_epochs):
+        print(f"Epoch {epoch + 1}")
         running_loss = 0.0
-        for inputs, _ in train_loader:
-            inputs = inputs.to(device)
+        stn_model.train()
+        for batch_idx, (transforms,img,transformed_img) in enumerate(train_loader):
+            #print(img.shape)
+            #print(transformed_img.shape)
+            img = img.to(device)
+            transformed_img = transformed_img.to(device)
+            #print(data,target)
+            #data, target = data.to(device), target.to(device)
+            #print("data:",data.shape)
+            #print("target:",target.shape)
+
             optimizer.zero_grad()
-            outputs = stn_model(inputs)
-            loss = criterion(outputs, inputs)
+            recovered = stn_model(transformed_img)
+            loss = criterion(recovered, img) 
+            #output = stn_model(data)
+            #print("output:",output.shape)
+            #print("target:",target)
+            #loss = F.nll_loss(output, target)
             loss.backward()
             optimizer.step()
-            running_loss += loss.item()
+            running_loss+= loss.item()
+            if batch_idx % 20 == 0:
+                save_model(stn_model,model_name='../../stn_model_01_new_trained.pt')
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                    epoch, batch_idx * len(img), len(train_loader.dataset),
+                    100. * batch_idx / len(train_loader), loss.item()))
 
         # Validation phase
         stn_model.eval()  # Set the model to evaluation mode
         validation_loss = 0.0
         with torch.no_grad():
-            for val_inputs, _ in validation_loader:
-                val_inputs = val_inputs.to(device)
-                val_outputs = stn_model(val_inputs)
-                val_loss = criterion(val_outputs, val_inputs)
+            for (transforms, img,transformed_img) in tqdm.tqdm(validation_loader):
+                img = img.to(device)
+                transformed_img = transformed_img.to(device)
+                #val_inputs = val_inputs.to(device)
+                recovered = stn_model(transformed_img)
+                val_loss = criterion(recovered, img) 
+                #val_loss = criterion(val_outputs, val_inputs)
+                #val_loss = F.nll_loss(val_outputs, target)
                 validation_loss += val_loss.item()
                 
-        print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {running_loss / len(training_loader)}")
-        print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {validation_loss / len(validation_loader)}")
+        print(f"Epoch {epoch + 1}/{num_epochs}, Training Loss: {running_loss / len(training_loader)}")
+        print(f"Epoch {epoch + 1}/{num_epochs}, Validation Loss: {validation_loss / len(validation_loader)}")
 
     print("Finished Training")
     return stn_model,train_loader
@@ -125,11 +161,4 @@ def visualize_stn(stn_model, data_loader):
             print(len(stn_predicted_image))
             break  # Show only the first image from the batch
 
-def save_model(model,model_name='../results/stn_model.pt'):
-    torch.save(model.state_dict(), model_name)
-    
-def load_model(model,model_name='../results/stn_model.pt'):
-    model = SpatialTransformerNetwork()
-    model.load_state_dict(torch.load(model_name))
-    model.eval()
-    return model
+

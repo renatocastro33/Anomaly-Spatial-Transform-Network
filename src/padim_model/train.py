@@ -4,6 +4,7 @@ from .model import *
 from.dataloader import MVTecDataset
 
 from tqdm import tqdm
+
 from collections import OrderedDict
 
 import matplotlib.pyplot as plt
@@ -127,14 +128,15 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
     total_roc_auc = []
     total_pixel_roc_auc = []
 
+    stn_model.to(device)
     stn_model.eval()
     
     for class_name in CLASS_NAMES:
 
         train_dataset = MVTecDataset(CLASS_NAMES,data_path , class_name=class_name, is_train=True)
-        train_dataloader = DataLoader(train_dataset, batch_size=32, pin_memory=True)
+        train_dataloader = DataLoader(train_dataset, batch_size=128)
         test_dataset =MVTecDataset(CLASS_NAMES,data_path, class_name=class_name, is_train=False)
-        test_dataloader = DataLoader(test_dataset, batch_size=32, pin_memory=True)
+        test_dataloader = DataLoader(test_dataset, batch_size=128)
 
         train_outputs = OrderedDict([('layer1', []), ('layer2', []), ('layer3', [])])
         test_outputs = OrderedDict([('layer1', []), ('layer2', []), ('layer3', [])])
@@ -145,7 +147,7 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
             for (x, _, _) in tqdm(train_dataloader, '| feature extraction | train | %s |' % class_name):
                 # model prediction
                 with torch.no_grad():
-                    x = stn_model(x)
+                    x = stn_model(x.to(device))
                     _ = model(x.to(device))
                 # get intermediate layer outputs
                 for k, v in zip(train_outputs.keys(), outputs):
@@ -189,7 +191,7 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
             gt_list.extend(y.cpu().detach().numpy())
             # model prediction
             with torch.no_grad():
-                x, mask = stn_model(x, mask)
+                x, mask = stn_model(x.to(device), mask.to(device))
                 _ = model(x.to(device))
                 
             test_imgs.extend(x.cpu().detach().numpy())
@@ -242,11 +244,16 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
         fpr, tpr, _ = roc_curve(gt_list, img_scores)
         img_roc_auc = roc_auc_score(gt_list, img_scores)
         total_roc_auc.append(img_roc_auc)
-        print('image ROCAUC: %.3f' % (img_roc_auc))
+        print(class_name,' test image ROCAUC: %.3f' % (img_roc_auc))
         fig_img_rocauc.plot(fpr, tpr, label='%s img_ROCAUC: %.3f' % (class_name, img_roc_auc))
         
         # get optimal threshold
         gt_mask = np.asarray(gt_mask_list)
+
+        gt_mask = np.array(gt_mask.flatten(), dtype=np.int8)
+        #scores = np.array(scores.flatten(), dtype=np.float64)
+        print(gt_mask.flatten())
+        print(scores.flatten())
         precision, recall, thresholds = precision_recall_curve(gt_mask.flatten(), scores.flatten())
         a = 2 * precision * recall
         b = precision + recall
@@ -257,7 +264,8 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
         fpr, tpr, _ = roc_curve(gt_mask.flatten(), scores.flatten())
         per_pixel_rocauc = roc_auc_score(gt_mask.flatten(), scores.flatten())
         total_pixel_roc_auc.append(per_pixel_rocauc)
-        print('pixel ROCAUC: %.3f' % (per_pixel_rocauc))
+        print(class_name,' test pixel ROCAUC: %.3f' % (per_pixel_rocauc))
+
 
         fig_pixel_rocauc.plot(fpr, tpr, label='%s ROCAUC: %.3f' % (class_name, per_pixel_rocauc))
         save_dir = path_results + '/' + f'pictures_{arch}'
