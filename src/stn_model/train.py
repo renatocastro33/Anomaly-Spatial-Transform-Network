@@ -11,7 +11,7 @@ from .dataloader import MVTEC
 from .model import SpatialTransformerNetwork
 
 from itertools import islice
-import tqdm
+from tqdm.notebook import trange, tqdm
 
 train_transform = transforms.Compose([
     transforms.Resize((224, 224)),  # Resize and crop the image to 224x224
@@ -69,51 +69,56 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
     criterion = nn.MSELoss()    
     optimizer = optim.Adam(stn_model.parameters(), lr=learning_rate)
 
-    print("Training ..")
-    
+
+    print("Training..")
+
     for epoch in range(num_epochs):
-        print(f"Epoch {epoch + 1}")
+
+        print(f"Epoch {epoch+1}")
+        
         running_loss = 0.0
         stn_model.train()
-        for batch_idx, (transforms,img,transformed_img) in enumerate(train_loader):
-            #print(img.shape)
-            #print(transformed_img.shape)
+        
+        # Usar tqdm para visualizar progreso
+        for batch_idx, (transforms, img, transformed_img) in tqdm(enumerate(train_loader)):  
+
             img = img.to(device)
             transformed_img = transformed_img.to(device)
-            #print(data,target)
-            #data, target = data.to(device), target.to(device)
-            #print("data:",data.shape)
-            #print("target:",target.shape)
-
+                
             optimizer.zero_grad()
-            recovered = stn_model(transformed_img)
-            loss = criterion(recovered, img) 
-            #output = stn_model(data)
-            #print("output:",output.shape)
-            #print("target:",target)
-            #loss = F.nll_loss(output, target)
+            recovered = stn_model(transformed_img)  
+            loss = criterion(recovered, img)
             loss.backward()
             optimizer.step()
-            running_loss+= loss.item()
-            if batch_idx % 20 == 0:
-                save_model(stn_model,model_name='../../stn_model_01_new_trained.pt')
-                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    epoch, batch_idx * len(img), len(train_loader.dataset),
-                    100. * batch_idx / len(train_loader), loss.item()))
+                
+            running_loss += loss.item()
+            
+            # Actualiza barra de progreso con métricas 
+            tqdm.write(f"Epoch {epoch+1}") 
+            tqdm.write(f"Loss: {loss.item():.3f}")
+            
+        print(f"Final Loss: {running_loss/len(train_loader):.3f}")
 
         # Validation phase
         stn_model.eval()  # Set the model to evaluation mode
         validation_loss = 0.0
         with torch.no_grad():
-            for (transforms, img,transformed_img) in tqdm.tqdm(validation_loader):
+
+            for batch_idx, (transforms, img, transformed_img) in tqdm(enumerate(validation_loader), total=len(validation_loader)):
+
                 img = img.to(device)
                 transformed_img = transformed_img.to(device)
-                #val_inputs = val_inputs.to(device)
+                
                 recovered = stn_model(transformed_img)
-                val_loss = criterion(recovered, img) 
-                #val_loss = criterion(val_outputs, val_inputs)
-                #val_loss = F.nll_loss(val_outputs, target)
-                validation_loss += val_loss.item()
+                
+                loss = criterion(recovered, img)
+                
+                # Actualiza barra de progreso
+                tqdm.write(f"Val Loss: {loss.item():.3f}")
+                
+                validation_loss += loss.item()
+
+            print(f"Total Val Loss: {validation_loss/len(validation_loader):.3f}")
                 
         print(f"Epoch {epoch + 1}/{num_epochs}, Training Loss: {running_loss / len(training_loader)}")
         print(f"Epoch {epoch + 1}/{num_epochs}, Validation Loss: {validation_loss / len(validation_loader)}")
