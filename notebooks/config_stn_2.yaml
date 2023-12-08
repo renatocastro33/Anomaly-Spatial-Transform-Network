@@ -15,3 +15,5 @@ parameters:
     values: [1]
   device:
     values: ['2']
+
+#tmux a -t session_02

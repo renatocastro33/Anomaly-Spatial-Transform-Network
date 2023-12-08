@@ -24,7 +24,7 @@ from PIL import Image
 import torch
 from torch import Tensor, nn
 import torch.nn.functional as F
-
+import pandas as pd
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import random
@@ -35,6 +35,7 @@ import os
 import pickle
 from tqdm import tqdm
 from collections import OrderedDict
+import wandb
 
 # device setup
 use_cuda = torch.cuda.is_available()
@@ -97,10 +98,24 @@ def plot_fig(test_img, scores, gts, threshold, save_dir, class_name):
         plt.close()
 
 
-def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',arch = 'resnet18',path_results='../results/mvtec_result'):
+def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',
+          arch = 'resnet18',path_results='../results/mvtec_result',batch_size=128,experiment_name='exp-padim',
+          use_stn = 1,args=None):
     
     
+    PROJECT_WANDB = "neurips_23"
+    ENTITY = "ml_projects"
 
+    config = wandb.config
+    wandb.watch_called = False
+    
+    run = wandb.init(project=PROJECT_WANDB, 
+                    entity=ENTITY,
+                    config=args, 
+                    name=experiment_name, 
+                    job_type="model-training",
+                    tags=["paper"])
+    
     model,t_d,d =  base_model(device,arch=arch)
 
     random.seed(1024)
@@ -127,16 +142,13 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
 
     total_roc_auc = []
     total_pixel_roc_auc = []
-
-    stn_model.to(device)
-    stn_model.eval()
     
     for class_name in CLASS_NAMES:
 
         train_dataset = MVTecDataset(CLASS_NAMES,data_path , class_name=class_name, is_train=True)
-        train_dataloader = DataLoader(train_dataset, batch_size=128)
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
         test_dataset =MVTecDataset(CLASS_NAMES,data_path, class_name=class_name, is_train=False)
-        test_dataloader = DataLoader(test_dataset, batch_size=128)
+        test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 
         train_outputs = OrderedDict([('layer1', []), ('layer2', []), ('layer3', [])])
         test_outputs = OrderedDict([('layer1', []), ('layer2', []), ('layer3', [])])
@@ -147,7 +159,8 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
             for (x, _, _) in tqdm(train_dataloader, '| feature extraction | train | %s |' % class_name):
                 # model prediction
                 with torch.no_grad():
-                    x = stn_model(x.to(device))
+                    if use_stn==1:
+                        x = stn_model(x.to(device))
                     _ = model(x.to(device))
                 # get intermediate layer outputs
                 for k, v in zip(train_outputs.keys(), outputs):
@@ -191,7 +204,8 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
             gt_list.extend(y.cpu().detach().numpy())
             # model prediction
             with torch.no_grad():
-                x, mask = stn_model(x.to(device), mask.to(device))
+                if use_stn==1:
+                    x = stn_model(x.to(device))#, mask.to(device))
                 _ = model(x.to(device))
                 
             test_imgs.extend(x.cpu().detach().numpy())
@@ -243,7 +257,9 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
         gt_list = np.asarray(gt_list)
         fpr, tpr, _ = roc_curve(gt_list, img_scores)
         img_roc_auc = roc_auc_score(gt_list, img_scores)
-        total_roc_auc.append(img_roc_auc)
+        total_roc_auc.append({"class_name":class_name,
+                              "image_ROCAUC":img_roc_auc})
+        
         print(class_name,' test image ROCAUC: %.3f' % (img_roc_auc))
         fig_img_rocauc.plot(fpr, tpr, label='%s img_ROCAUC: %.3f' % (class_name, img_roc_auc))
         
@@ -263,7 +279,10 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
         # calculate per-pixel level ROCAUC
         fpr, tpr, _ = roc_curve(gt_mask.flatten(), scores.flatten())
         per_pixel_rocauc = roc_auc_score(gt_mask.flatten(), scores.flatten())
-        total_pixel_roc_auc.append(per_pixel_rocauc)
+
+        total_pixel_roc_auc.append({"class_name":class_name,
+                              "pixel_ROCAUC":per_pixel_rocauc})
+        
         print(class_name,' test pixel ROCAUC: %.3f' % (per_pixel_rocauc))
 
 
@@ -271,5 +290,21 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',ar
         save_dir = path_results + '/' + f'pictures_{arch}'
         os.makedirs(save_dir, exist_ok=True)
         plot_fig(test_imgs, scores, gt_mask_list, threshold, save_dir, class_name)
+        
+        wandb.log({(class_name+"_image_ROCAUC"):img_roc_auc,
+                   (class_name+"_pixel_ROCAUC"):per_pixel_rocauc,
 
+                   (class_name+"_plot"): wandb.Image(fig)
+
+                   })
+
+    df_image_rocauc = pd.DataFrame(total_roc_auc)
+    df_pixel_rocauc = pd.DataFrame(total_pixel_roc_auc)
+    
+    df_total  = df_image_rocauc.merge(df_pixel_rocauc,on='class_name',how='left')
+    
+    
+    wandb.log({"total_metrics":wandb.Table(dataframe=df_total)})
+    
+    run.finish()
     return fig_pixel_rocauc,fig_img_rocauc,total_roc_auc,total_pixel_roc_auc,fig

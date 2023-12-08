@@ -40,11 +40,11 @@ train_transform = transforms.Compose([
 ])
 
 # Definir una función para cargar y preprocesar imágenes
-def load_and_preprocess_image(stn_model,img_path):
+def load_and_preprocess_image(stn_model,img_path,device):
     image = Image.open(img_path).convert("RGB")
     image = train_transform(image)
     imgs = [image]
-    inputs = torch.stack(imgs).cuda()
+    inputs = torch.stack(imgs).to(device)
     with torch.no_grad():
         stn_predicted = stn_model(inputs)
     orig_image = inputs[0].cpu().numpy().transpose((1, 2, 0))
@@ -52,6 +52,8 @@ def load_and_preprocess_image(stn_model,img_path):
     orig_image = (orig_image * [0.229, 0.224, 0.225]) + [0.485, 0.456, 0.406]
     stn_predicted_image = (stn_predicted_image * [0.229, 0.224, 0.225]) + [0.485, 0.456, 0.406]
     return orig_image, stn_predicted_image, orig_image - stn_predicted_image
+
+
 def save_model(model,model_name='../results/stn_model.pt'):
     torch.save(model.state_dict(), model_name)
     
@@ -76,7 +78,7 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
     config = wandb.config
     wandb.watch_called = False
     
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:"+str(args.device) if torch.cuda.is_available() else "cpu")
 
     mvtec_dataset = MVTEC(root_dir=data_dir, transform = train_transform,device=device)
     train_loader = DataLoader(mvtec_dataset, batch_size=batch_size, shuffle=True)
@@ -112,12 +114,13 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
     # Using GPU
     print("Using GPU optimization")
     stn_model = SpatialTransformerNetwork()
-    stn_model = nn.DataParallel(stn_model) 
+    #stn_model = nn.DataParallel(stn_model) 
     stn_model.to(device)
 
     if loss_name=='mse':
         criterion = nn.MSELoss()    
     elif loss_name== 'l1_mse':
+        """
         class CombinedLoss(nn.Module):
             def __init__(self):
                 super().__init__()
@@ -126,7 +129,30 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
             
             def forward(self, output, target):        
                 return self.mse(output, target) + self.l1(output, target)
-        criterion = CombinedLoss()
+        """
+        class CombinedLoss(nn.Module):
+            def __init__(self, ssim_weight=0.1,l1_weight=1):
+                super().__init__()
+                self.mse = nn.MSELoss()
+                self.l1 = nn.L1Loss()
+                self.ssim = ssim  # Ajusta el tamaño de la ventana según tus necesidades
+                self.ssim_weight = ssim_weight
+                self.l1_weight = l1_weight
+
+            def forward(self, output, target):
+                mse_loss = self.mse(output, target)
+                l1_loss = self.l1(output, target)
+                ssim_loss = 1 - self.ssim(output, target)
+
+                return mse_loss + self.l1_weight*l1_loss + self.ssim_weight * ssim_loss
+
+        # Uso
+        criterion = CombinedLoss(ssim_weight=args.ssim_weight,
+                                 l1_weight=args.l1_weight) 
+
+        print("*"*20)
+        print("use CombinedLoss!")
+        #criterion = CombinedLoss()
     else:    
         criterion = ssim
         
@@ -253,7 +279,7 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
         fig, axes = plt.subplots(len(img_paths_1), 6, figsize=(30, 5 * len(img_paths_1)))
 
         for i, img_path in enumerate(img_paths_1):
-            orig_image, stn_predicted_image, diff_image = load_and_preprocess_image(stn_model,img_paths_1[i])
+            orig_image, stn_predicted_image, diff_image = load_and_preprocess_image(stn_model,img_paths_1[i],device)
 
             # Plot the images side by side
             axes[i, 0].imshow(orig_image)
@@ -268,7 +294,7 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
             axes[i, 2].set_title('DIFF STN Predicted Image')
             axes[i, 2].axis('off')
 
-            orig_image, stn_predicted_image, diff_image = load_and_preprocess_image(stn_model,img_paths_2[i])
+            orig_image, stn_predicted_image, diff_image = load_and_preprocess_image(stn_model,img_paths_2[i],device)
 
             # Plot the images side by side
             axes[i, 3].imshow(orig_image)

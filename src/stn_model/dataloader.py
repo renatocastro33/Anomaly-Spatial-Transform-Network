@@ -51,11 +51,7 @@ class MVTEC(Dataset):
           images = os.listdir(class_path)
           for img_name in images:
             img_path = os.path.join(class_path, img_name)
-            img = Image.open(img_path).convert("RGB")        
-            #img = cv2.imread(img_path)
-            #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            #img = img / 255.0
-            self.data.append((img, clase))
+            self.data.append((img_path, clase))
 
       self.rotation = RandomRotation(degrees=45)
       self.translation = RandomTranslate(translate=(0.2, 0.2))
@@ -64,7 +60,12 @@ class MVTEC(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        img, clase = self.data[index]
+        img_path, clase = self.data[index]
+        #img = Image.open(img_path).convert("RGB")        
+        img = cv2.imread(img_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(img)
+
         if self.transform:
             img = self.transform(img)
         transformed_img, transforms = self.apply_random_transforms(img) 

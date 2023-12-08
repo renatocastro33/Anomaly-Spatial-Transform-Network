@@ -34,6 +34,8 @@ def get_default_args():
   parser.add_argument('--model_name', default='../results/stn_model_01_new.pt', type=str, help='path para guardar el modelo')
   parser.add_argument('--sweep', default=0, type=int, help='path para guardar el modelo')
   parser.add_argument('--device', default='0', type=str, help='path para guardar el modelo')
+  parser.add_argument('--ssim_weight', default=0.1, type=float, help='path para guardar el modelo')
+  parser.add_argument('--l1_weight', default=1, type=float, help='path para guardar el modelo')
 
   return parser
 
@@ -44,6 +46,8 @@ def train(args):
   #args = parser.parse_args()
 
   print(args)
+  
+  utils.set_seed()
 
   stn_model,train_loader = stn_train.start(data_dir =args.data_dir,
                         batch_size = args.batch_size,
@@ -57,7 +61,7 @@ def train(args):
   from torch import Tensor, nn
 
   stn_model = SpatialTransformerNetwork()
-  stn_model = nn.DataParallel(stn_model)
+  #stn_model = nn.DataParallel(stn_model)
   stn_model.to("cuda")
 
   stn_model_loaded = stn_train.load_model(stn_model,model_name='../results/stn_model_01_new.pt')
