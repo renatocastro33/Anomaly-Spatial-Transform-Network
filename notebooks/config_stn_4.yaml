@@ -14,7 +14,7 @@ parameters:
   sweep:
     values: [1]
   device:
-    values: ['3']
+    values: ['2']
   ssim_weight:
     values: [0.9,0.1]
   l1_weight:

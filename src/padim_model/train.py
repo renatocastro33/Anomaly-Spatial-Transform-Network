@@ -204,8 +204,8 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',
             gt_list.extend(y.cpu().detach().numpy())
             # model prediction
             with torch.no_grad():
-                if use_stn==1:
-                    x = stn_model(x.to(device))#, mask.to(device))
+                #if use_stn==1:
+                #    x = stn_model(x.to(device))#, mask.to(device))
                 _ = model(x.to(device))
                 
             test_imgs.extend(x.cpu().detach().numpy())
