@@ -5,7 +5,7 @@ import torch.nn.functional as F
 class SpatialTransformerNetwork(nn.Module):
     
     def __init__(self):
-        super(SpatialTransformerNetwork, self).__init__()
+        super().__init__()
 
         self.localization = nn.Sequential(
             nn.Conv2d(3, 8, kernel_size=7),

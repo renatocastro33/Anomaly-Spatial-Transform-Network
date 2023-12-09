@@ -44,6 +44,9 @@ class MVTecDataset(Dataset):
             mask = Image.open(mask)
             mask = self.transform_mask(mask)
 
+        x = x.to("cuda")
+        mask = mask.to("cuda")
+        
         return x, y, mask
 
     def __len__(self):

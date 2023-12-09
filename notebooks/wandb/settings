@@ -1,0 +1,5 @@
+[default]
+entity = ml_projects
+project = neurips_23
+base_url = https://api.wandb.ai
+
