@@ -31,6 +31,7 @@ def get_default_args():
   parser.add_argument('--path_results', default='../results/padim_results', type=str, help='número de épocas')
   parser.add_argument('--arch', default='resnet18', type=str, help='función de pérdida') 
   parser.add_argument('--use_stn', default=0, type=int, help='path para guardar el modelo')
+  parser.add_argument('--use_stn_mask', default=0, type=int, help='path para guardar el modelo')
   parser.add_argument('--path_model_stn', default='../results/models/v1_mse/checkpoint_best_model.pth', type=str, help='path para guardar el modelo')
   parser.add_argument('--device', default='0', type=str, help='path para guardar el modelo')
 
@@ -54,8 +55,8 @@ def train(args):
     if args.use_stn == 1:
         
         stn_model = SpatialTransformerNetwork()
-        stn_model = nn.DataParallel(stn_model)
-        checkpoint = torch.load(args.path_model_stn) 
+        #stn_model = nn.DataParallel(stn_model)
+        checkpoint = torch.load(args.path_model_stn,map_location='cuda:0')
         stn_model.load_state_dict(checkpoint["model_state_dict"])
         stn_model.to("cuda")
         stn_model.eval()
