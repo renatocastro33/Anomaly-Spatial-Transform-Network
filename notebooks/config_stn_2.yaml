@@ -2,18 +2,23 @@ program: train_stn_model.py
 method: grid
 parameters:
   batch_size:
-    values: [128,64]
+    values: [8]
   learning_rate:
-    values: [0.00005,0.0005] #0.001, 0.00001,
+    values: [0.0005,0.00005] #0.001, 0.00001,
   num_epochs:
-    values: [800] # [54,27,9,3,1] 27,18,9,6,3,2,1] este debe ser un divisor de hidden_dim
+    values: [1000] # [54,27,9,3,1] 27,18,9,6,3,2,1] este debe ser un divisor de hidden_dim
   loss_name:
-    values: [mse] # [64,12,8,6,4,2,1]
+    values: [l1_mse] # [64,12,8,6,4,2,1]
   model_name:
-    values: [exp_sweep] # [128,64,32,16,4,,64,12,8,6,4,2,1] # self.transformer.decoder.num_layers
+    values: [exp_sweep_new] # [128,64,32,16,4,,64,12,8,6,4,2,1] # self.transformer.decoder.num_layers
   sweep:
     values: [1]
   device:
     values: ['2']
+  ssim_weight:
+    values: [0.8,0.7]
+  l1_weight:
+    values: [0.2,0.1]
 
-#tmux a -t session_02
+#tmux a -t session_00
+#python train_stn_model.py --batch_size=64 --device=0 --l1_weight=0.2 --learning_rate=0.0005 --loss_name=l1_mse --model_name=exp_sweep --num_epochs=1000 --ssim_weight=0.8 --sweep=0

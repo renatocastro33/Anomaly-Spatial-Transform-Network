@@ -2,7 +2,7 @@ program: train_stn_model.py
 method: grid
 parameters:
   batch_size:
-    values: [32]
+    values: [16]
   learning_rate:
     values: [0.0005,0.00005] #0.001, 0.00001,
   num_epochs:
@@ -14,7 +14,7 @@ parameters:
   sweep:
     values: [1]
   device:
-    values: ['0']
+    values: ['1']
   ssim_weight:
     values: [0.8,0.7]
   l1_weight:
