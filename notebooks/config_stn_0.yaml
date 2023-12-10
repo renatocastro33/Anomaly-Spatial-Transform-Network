@@ -10,14 +10,15 @@ parameters:
   loss_name:
     values: [l1_mse] # [64,12,8,6,4,2,1]
   model_name:
-    values: [exp_sweep] # [128,64,32,16,4,,64,12,8,6,4,2,1] # self.transformer.decoder.num_layers
+    values: [exp_sweep_new] # [128,64,32,16,4,,64,12,8,6,4,2,1] # self.transformer.decoder.num_layers
   sweep:
     values: [1]
   device:
-    values: ['1']
+    values: ['0']
   ssim_weight:
-    values: [0.5,0.1]
+    values: [0.8,0.7]
   l1_weight:
-    values: [0.5,0.1]
+    values: [0.2,0.1]
 
-#tmux a -t session_01
+#tmux a -t session_00
+#python train_stn_model.py --batch_size=64 --device=0 --l1_weight=0.2 --learning_rate=0.0005 --loss_name=l1_mse --model_name=exp_sweep --num_epochs=1000 --ssim_weight=0.8 --sweep=0 --stn_original 1
