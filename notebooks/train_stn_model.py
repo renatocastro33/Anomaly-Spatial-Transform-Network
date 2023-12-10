@@ -144,3 +144,5 @@ if __name__ == '__main__':
     def main_process(): 
         train(args)
     main_process()
+    
+    #python train_stn_model.py --batch_size=64 --device=0 --l1_weight=0.2 --learning_rate=0.0005 --loss_name=l1_mse --model_name=exp_sweep --num_epochs=1000 --ssim_weight=0.8 --sweep=0 --stn_original 1
