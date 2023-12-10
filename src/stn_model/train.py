@@ -346,17 +346,17 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
 
 
         # Obtén las rutas de las imágenes
-        img_paths_1 =  [(glob.glob("../data/bottle/test/broken_large/*.png")[15],'bottle_broken_large')]
-        img_paths_1 += [(glob.glob("../data/cable/test/bent_wire/*.png")[15],'cable_bent_wire')]
-        img_paths_1 += [(glob.glob("../data/capsule/test/crack/*.png")[15],'capsule_crack')]
-        img_paths_1 += [(glob.glob("../data/carpet/test/hole/*.png")[15],'carpet_hole')]
-        img_paths_1 += [(glob.glob("../data/screw/test/scratch_head/*.png")[15],'screw_scratch_head')]
+        img_paths_1 =  [(glob.glob("../data/bottle/test/broken_large/*.png")[10],'bottle_broken_large')]
+        img_paths_1 += [(glob.glob("../data/cable/test/bent_wire/*.png")[10],'cable_bent_wire')]
+        img_paths_1 += [(glob.glob("../data/capsule/test/crack/*.png")[10],'capsule_crack')]
+        img_paths_1 += [(glob.glob("../data/carpet/test/hole/*.png")[10],'carpet_hole')]
+        img_paths_1 += [(glob.glob("../data/screw/test/scratch_head/*.png")[10],'screw_scratch_head')]
         
-        img_paths_2 =  [(glob.glob("../data/grid/test/broken/*.png")[15],'grid_broken')]
-        img_paths_2 += [(glob.glob("../data/hazelnut/test/crack/*.png")[15],'hazelnut_crack')]
-        img_paths_2 += [(glob.glob("../data/leather/test/glue/*.png")[15],'leather_glue')]
-        img_paths_2 += [(glob.glob("../data/metal_nut/test/scratch/*.png")[15],'metal_nut_scratch')]
-        img_paths_2 += [(glob.glob("../data/zipper/test/broken_teeth/*.png")[15],'zipper_broken_teeth')]
+        img_paths_2 =  [(glob.glob("../data/grid/test/broken/*.png")[10],'grid_broken')]
+        img_paths_2 += [(glob.glob("../data/hazelnut/test/crack/*.png")[10],'hazelnut_crack')]
+        img_paths_2 += [(glob.glob("../data/leather/test/glue/*.png")[10],'leather_glue')]
+        img_paths_2 += [(glob.glob("../data/metal_nut/test/scratch/*.png")[10],'metal_nut_scratch')]
+        img_paths_2 += [(glob.glob("../data/zipper/test/broken_teeth/*.png")[10],'zipper_broken_teeth')]
 
         # Crea una figura para colocar las imágenes
         fig, axes = plt.subplots(len(img_paths_1), 6, figsize=(30, 5 * len(img_paths_1)))

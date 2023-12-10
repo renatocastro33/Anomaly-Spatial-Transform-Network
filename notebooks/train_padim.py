@@ -75,4 +75,7 @@ if __name__ == '__main__':
     main_process()
     
     #python train_padim.py --arch resnet18 --use_stn 0 --path_model_stn ../results/models/v1_mse/checkpoint_best_model.pth
-    
+    #! python train_padim.py --arch resnet18 --use_stn_mask 0 --use_stn 0 --path_model_stn ../results/models/v1_mse/checkpoint_best_model_ssim_weight_08.pth
+    #! python train_padim.py --arch resnet18 --use_stn_mask 1 --use_stn 1 --path_model_stn ../results/models/v1_mse/checkpoint_best_model_ssim_weight_08.pth
+    #!python train_padim.py --arch wide_resnet50_2 --use_stn_mask 0 --use_stn 0 --path_model_stn ../results/models/v1_mse/checkpoint_best_model_ssim_weight_08.pth
+    #!python train_padim.py --arch wide_resnet50_2 --use_stn_mask 1 --use_stn 1 --path_model_stn ../results/models/v1_mse/checkpoint_best_model_ssim_weight_08.pth

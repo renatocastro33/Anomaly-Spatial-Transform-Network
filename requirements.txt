@@ -6,3 +6,4 @@ matplotlib
 scikit-image
 scikit-learn
 wandb
+pytorch_msssim
