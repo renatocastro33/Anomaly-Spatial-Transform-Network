@@ -136,6 +136,8 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',
     model.layer3[-1].register_forward_hook(hook)   
 
     os.makedirs(os.path.join(path_results, 'temp_%s' % arch), exist_ok=True)
+    os.makedirs(os.path.join(path_results, 'temp_%s' % arch,str(run.id)), exist_ok=True)
+    
     fig, ax = plt.subplots(1, 2, figsize=(20, 10))
     fig_img_rocauc = ax[0]
     fig_pixel_rocauc = ax[1]
@@ -154,8 +156,9 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',
         test_outputs = OrderedDict([('layer1', []), ('layer2', []), ('layer3', [])])
 
         # extract train set features
-        train_feature_filepath = os.path.join(path_results, 'temp_%s' % arch, 'train_%s.pkl' % class_name)
+        train_feature_filepath = os.path.join(path_results, 'temp_%s' % arch,str(run.id), 'train_%s.pkl' % class_name)
         if not os.path.exists(train_feature_filepath):
+            print("Training..")
             for (x, _, _) in tqdm(train_dataloader, '| feature extraction | train | %s |' % class_name):
                 # model prediction
                 with torch.no_grad():
@@ -204,8 +207,8 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',
             gt_list.extend(y.cpu().detach().numpy())
             # model prediction
             with torch.no_grad():
-                #if use_stn==1:
-                #    x = stn_model(x.to(device))#, mask.to(device))
+                if use_stn==1 and args.use_stn_mask == 1:
+                    x,mask = stn_model(x.to(device), mask.to(device))
                 _ = model(x.to(device))
                 
             test_imgs.extend(x.cpu().detach().numpy())
