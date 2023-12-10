@@ -5,9 +5,11 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import random
 import torchvision.transforms as TF
+import random
 
 import torch
 import torchvision.transforms as transforms
+from natsort import natsorted
 
 
 class RandomRotation:
@@ -43,12 +45,16 @@ class MVTEC(Dataset):
       self.classes = [mvtec_class for mvtec_class in os.listdir(root_dir) if not '.' in mvtec_class]
       self.data = []  # Collect all the data upon initialization
       
-      sorted(self.classes)
+      self.classes = natsorted(self.classes)
+
       self.class_to_idx = {c: i for i, c in enumerate(list(set(self.classes)))}
 
       for clase in self.classes:
           class_path = os.path.join(root_dir, clase, "train", "good")
           images = os.listdir(class_path)
+
+          images = natsorted(images)
+
           for img_name in images:
             img_path = os.path.join(class_path, img_name)
             self.data.append((img_path, clase))
@@ -68,7 +74,11 @@ class MVTEC(Dataset):
 
         if self.transform:
             img = self.transform(img)
-        transformed_img, transforms = self.apply_random_transforms(img) 
+
+        if random.random() < 0.5:
+          transformed_img, transforms = self.apply_random_transforms(img) 
+        else:
+          transformed_img, transforms = img, [0,[0,0]]
         img.to(self.device)
         transformed_img.to(self.device)
         return transforms, img, transformed_img

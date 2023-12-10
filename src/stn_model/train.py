@@ -39,6 +39,14 @@ train_transform = transforms.Compose([
     
 ])
 
+def reverse_transformation(img,device):
+    with torch.no_grad():
+      img = [img]
+      img = torch.stack(img).to(device)
+      img = img[0].cpu().detach().numpy().transpose((1, 2, 0))
+      img = (img * [0.229, 0.224, 0.225]) + [0.485, 0.456, 0.406]
+    return img
+
 # Definir una función para cargar y preprocesar imágenes
 def load_and_preprocess_image(stn_model,img_path,device):
     image = Image.open(img_path).convert("RGB")
@@ -177,6 +185,9 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
         running_ssim_value = 0.0
         running_ms_ssim_value = 0.0
 
+        train_images = []
+
+
         # Crea una barra de progreso con tqdm
         with tqdm(total=total_batches, desc=f"Epoch {epoch+1}", unit="batch") as pbar:
             for batch_idx, (transforms, img, transformed_img) in enumerate(train_loader):  
@@ -185,23 +196,35 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
                 transformed_img = transformed_img.to(device)
                     
                 optimizer.zero_grad()
-                recovered = stn_model(transformed_img)
-                loss = criterion(recovered, img)
+
+                transformed_recovered = stn_model(transformed_img)
+
+                loss = criterion(transformed_recovered, img)
+
                 if loss_name =='ssim':
                     loss = 1-loss
                 loss.backward()
                 optimizer.step()
                     
                 running_loss += loss.item()
+
+                if batch_idx==0:
+                  train_images.append((img[0],transformed_img[0],transformed_recovered[0]))
+                  train_images.append((img[1],transformed_img[1],transformed_recovered[1]))
+                  train_images.append((img[2],transformed_img[2],transformed_recovered[2]))
+                  print("img max :",img.max(),'img min :',img.min())
+                  print("transformed_img max :",transformed_img.max(),'transformed_img min :',transformed_img.min())
+                  print("transformed_recovered max :",transformed_recovered.max(),'transformed_recovered min :',transformed_recovered.min())
+
                 # Convertir tensores a numpy
                 
                 #recovered = recovered.detach().cpu()
                 #img = img.detach().cpu()
                 
                 # Calcula SSIM (entre 0 y 1)
-                ssim_value = ssim(recovered, img, data_range=img.max() - img.min())
+                ssim_value = ssim(transformed_recovered, img, data_range=img.max() - img.min())
                 # Calcula MS-SSIM (extiende SSIM para multiples escalas)
-                ms_ssim_value = ms_ssim(recovered, img, data_range=img.max() - img.min())
+                ms_ssim_value = ms_ssim(transformed_recovered, img, data_range=img.max() - img.min())
                 
                 running_ssim_value+=ssim_value.item()
                 running_ms_ssim_value+=ms_ssim_value.item()
@@ -226,27 +249,34 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
         val_ssim_value = 0.0
         val_ms_ssim_value = 0.0
 
+        val_images = []
 
         with torch.no_grad():
             # Crea una barra de progreso con tqdm para la validación
             with tqdm(total=len(validation_loader), desc="Validation", unit="batch") as pbar_val:
                 for batch_idx, (transforms, img, transformed_img) in enumerate(validation_loader):
                     
+
                     img = img.to(device)
-                    transformed_img = transformed_img.to(device)
+                    transformed_img = transformed_img.to(device)                    
+                    transformed_recovered = stn_model(transformed_img)
+
+                    loss = criterion(transformed_recovered, img)
                     
-                    recovered = stn_model(transformed_img)
-                    
-                    loss = criterion(recovered, img)
                     if loss_name =='ssim':
                         loss = 1-loss
 
-                    # Convertir tensores a numpy
-                    #recovered = recovered.detach().cpu()
-                    #img = img.detach().cpu()
-                    
-                    ssim_value = ssim(recovered, img, data_range=img.max() - img.min())
-                    ms_ssim_value = ms_ssim(recovered, img, data_range=img.max() - img.min())
+                    if batch_idx==0:
+                      val_images.append((img[0],transformed_img[0],transformed_recovered[0]))
+                      val_images.append((img[1],transformed_img[1],transformed_recovered[1]))
+                      val_images.append((img[2],transformed_img[2],transformed_recovered[2]))
+
+                      print("img max :",img.max(),'img min :',img.min())
+                      print("transformed_img max :",transformed_img.max(),'transformed_img min :',transformed_img.min())
+                      print("transformed_recovered max :",transformed_recovered.max(),'transformed_recovered min :',transformed_recovered.min())
+
+                    ssim_value    = ssim(transformed_recovered, img, data_range=img.max() - img.min())
+                    ms_ssim_value = ms_ssim(transformed_recovered, img, data_range=img.max() - img.min())
                     
                     val_ssim_value += ssim_value.item()
                     val_ms_ssim_value += ms_ssim_value.item()
@@ -269,44 +299,97 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
         # Inicializa WandB
         #wandb.init(project='your_project_name', name='image_visualization')
 
+        #training images
+        fig1, axes1 = plt.subplots(6, 4, figsize=(20, 20))
+
+        for i, lista in enumerate(train_images):
+
+            img,transformed_img,transformed_recovered = lista
+
+            # Plot the images side by side
+            axes1[i, 0].imshow(reverse_transformation(img,device))
+            axes1[i, 0].set_title('Train Original Image')
+            axes1[i, 0].axis('off')
+
+            axes1[i, 1].imshow(reverse_transformation(transformed_img,device))
+            axes1[i, 1].set_title('Train Transformed Image')
+            axes1[i, 1].axis('off')
+
+            axes1[i, 2].imshow(reverse_transformation(transformed_recovered,device))
+            axes1[i, 2].set_title('Train Recovered Transformed Image')
+            axes1[i, 2].axis('off')
+
+            axes1[i, 3].imshow(reverse_transformation(img,device)-reverse_transformation(transformed_recovered,device))
+            axes1[i, 3].set_title('Train Diff Image - recovered')
+            axes1[i, 3].axis('off')
+
+        for i, lista in enumerate(val_images):
+
+            img,transformed_img,transformed_recovered = lista
+
+            # Plot the images side by side
+            axes1[i+3, 0].imshow(reverse_transformation(img,device))
+            axes1[i+3, 0].set_title('Val Original Image')
+            axes1[i+3, 0].axis('off')
+
+            axes1[i+3, 1].imshow(reverse_transformation(transformed_img,device))
+            axes1[i+3, 1].set_title('Val Transformed Image')
+            axes1[i+3, 1].axis('off')
+
+            axes1[i+3, 2].imshow(reverse_transformation(transformed_recovered,device))
+            axes1[i+3, 2].set_title('Val Recovered Transformed Image')
+            axes1[i+3, 2].axis('off')
+
+            axes1[i+3, 3].imshow(reverse_transformation(img,device)-reverse_transformation(transformed_recovered,device))
+            axes1[i+3, 3].set_title('Train Diff Image - recovered')
+            axes1[i+3, 3].axis('off')
 
 
         # Obtén las rutas de las imágenes
-        img_paths_1 = glob.glob("../data/screw/test/manipulated_front/*.png")[:10]
-        img_paths_2 = glob.glob("../data/screw/test/scratch_neck/*.png")[-10:]
+        img_paths_1 =  [(glob.glob("../data/bottle/test/broken_large/*.png")[15],'bottle_broken_large')]
+        img_paths_1 += [(glob.glob("../data/cable/test/bent_wire/*.png")[15],'cable_bent_wire')]
+        img_paths_1 += [(glob.glob("../data/capsule/test/crack/*.png")[15],'capsule_crack')]
+        img_paths_1 += [(glob.glob("../data/carpet/test/hole/*.png")[15],'carpet_hole')]
+        img_paths_1 += [(glob.glob("../data/screw/test/scratch_head/*.png")[15],'screw_scratch_head')]
+        
+        img_paths_2 =  [(glob.glob("../data/grid/test/broken/*.png")[15],'grid_broken')]
+        img_paths_2 += [(glob.glob("../data/hazelnut/test/crack/*.png")[15],'hazelnut_crack')]
+        img_paths_2 += [(glob.glob("../data/leather/test/glue/*.png")[15],'leather_glue')]
+        img_paths_2 += [(glob.glob("../data/metal_nut/test/scratch/*.png")[15],'metal_nut_scratch')]
+        img_paths_2 += [(glob.glob("../data/zipper/test/broken_teeth/*.png")[15],'zipper_broken_teeth')]
 
         # Crea una figura para colocar las imágenes
         fig, axes = plt.subplots(len(img_paths_1), 6, figsize=(30, 5 * len(img_paths_1)))
 
-        for i, img_path in enumerate(img_paths_1):
-            orig_image, stn_predicted_image, diff_image = load_and_preprocess_image(stn_model,img_paths_1[i],device)
+        for i, values in enumerate(img_paths_1):
+            orig_image, stn_predicted_image, diff_image = load_and_preprocess_image(stn_model,img_paths_1[i][0],device)
 
             # Plot the images side by side
             axes[i, 0].imshow(orig_image)
-            axes[i, 0].set_title('Original Image')
+            axes[i, 0].set_title('Original Image '+img_paths_1[i][1])
             axes[i, 0].axis('off')
 
             axes[i, 1].imshow(stn_predicted_image)
-            axes[i, 1].set_title('STN Predicted Image')
+            axes[i, 1].set_title('STN Predicted Image '+img_paths_1[i][1])
             axes[i, 1].axis('off')
 
             axes[i, 2].imshow(diff_image)
-            axes[i, 2].set_title('DIFF STN Predicted Image')
+            axes[i, 2].set_title('DIFF STN Predicted Image '+img_paths_1[i][1])
             axes[i, 2].axis('off')
 
-            orig_image, stn_predicted_image, diff_image = load_and_preprocess_image(stn_model,img_paths_2[i],device)
+            orig_image, stn_predicted_image, diff_image = load_and_preprocess_image(stn_model,img_paths_2[i][0],device)
 
             # Plot the images side by side
             axes[i, 3].imshow(orig_image)
-            axes[i, 3].set_title('Original Image')
+            axes[i, 3].set_title('Original Image '+img_paths_2[i][1])
             axes[i, 3].axis('off')
 
             axes[i, 4].imshow(stn_predicted_image)
-            axes[i, 4].set_title('STN Predicted Image')
+            axes[i, 4].set_title('STN Predicted Image '+img_paths_2[i][1])
             axes[i, 4].axis('off')
 
             axes[i, 5].imshow(diff_image)
-            axes[i, 5].set_title('DIFF STN Predicted Image')
+            axes[i, 5].set_title('DIFF STN Predicted Image '+img_paths_2[i][1])
             axes[i, 5].axis('off')
 
         wandb.log({
@@ -317,7 +400,9 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
                    "val_loss"  :average_val_loss,
                    "val_ssim":average_val_ssim,
                    "val_ms_ssim":average_val_ms_ssim,
-                   "image_visualization": wandb.Image(plt)})
+                   "image_training": wandb.Image(fig1),
+                   
+                   "image_testing": wandb.Image(fig)})
         
         save_model(stn_model,model_name='../results/stn_model.pt')
 
