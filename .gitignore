@@ -1,3 +1,6 @@
+*/**/*.pth
+*/**/*.ph
+
 data/**/
 data/*.txt
 data/*.xz

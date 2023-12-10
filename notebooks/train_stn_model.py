@@ -36,6 +36,7 @@ def get_default_args():
   parser.add_argument('--device', default='0', type=str, help='path para guardar el modelo')
   parser.add_argument('--ssim_weight', default=0.1, type=float, help='path para guardar el modelo')
   parser.add_argument('--l1_weight', default=1, type=float, help='path para guardar el modelo')
+  parser.add_argument('--stn_original', default=0, type=float, help='path para guardar el modelo')
 
   return parser
 

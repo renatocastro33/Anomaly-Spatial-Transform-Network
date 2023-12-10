@@ -103,7 +103,7 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',
           use_stn = 1,args=None):
     
     
-    PROJECT_WANDB = "neurips_23"
+    PROJECT_WANDB = "neurips_23_padim"
     ENTITY = "ml_projects"
 
     config = wandb.config
@@ -145,11 +145,13 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',
     total_roc_auc = []
     total_pixel_roc_auc = []
     
+    CLASS_NAMES = sorted(CLASS_NAMES)
+
     for class_name in CLASS_NAMES:
 
         train_dataset = MVTecDataset(CLASS_NAMES,data_path , class_name=class_name, is_train=True)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
-        test_dataset =MVTecDataset(CLASS_NAMES,data_path, class_name=class_name, is_train=False)
+        test_dataset  = MVTecDataset(CLASS_NAMES,data_path, class_name=class_name, is_train=False)
         test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 
         train_outputs = OrderedDict([('layer1', []), ('layer2', []), ('layer3', [])])
@@ -162,8 +164,8 @@ def start(CLASS_NAMES,stn_model,data_path = '../data/mvtec_anomaly_detection',
             for (x, _, _) in tqdm(train_dataloader, '| feature extraction | train | %s |' % class_name):
                 # model prediction
                 with torch.no_grad():
-                    if use_stn==1:
-                        x = stn_model(x.to(device))
+                    #if use_stn==1:
+                    #    x = stn_model(x.to(device))
                     _ = model(x.to(device))
                 # get intermediate layer outputs
                 for k, v in zip(train_outputs.keys(), outputs):
