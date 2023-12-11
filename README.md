@@ -18,6 +18,8 @@ Self-supervised learning Results
 
 [https://wandb.ai/ml_projects/neurips_23/reports/Enhancing-anomaly-detection-using-Spatial-Transformers-Nets--Vmlldzo2MjM0MjIy?accessToken=cusdx2o0y4ne8o5mqt4rgcv3chw25k7un3dxqri1uzp9zyl3lk7kinfo73rr17fg]
 
+![Self-supervised learning Training](materials/PY_Results_Image.png)
+
 
 # Requirements
 
