@@ -11,6 +11,14 @@ Anomaly detection, an essential component of industrial quality control and surv
 # Project based On
 This project is based on the Github PaDiM-Anomaly-Detection-Localization-master: [https://github.com/xiahaifeng1995/PaDiM-Anomaly-Detection-Localization-master/tree/main]
 
+
+# Results
+
+Self-supervised learning Results 
+
+[https://wandb.ai/ml_projects/neurips_23/reports/Enhancing-anomaly-detection-using-Spatial-Transformers-Nets--Vmlldzo2MjM0MjIy?accessToken=cusdx2o0y4ne8o5mqt4rgcv3chw25k7un3dxqri1uzp9zyl3lk7kinfo73rr17fg]
+
+
 # Requirements
 
 <p>Libraries:</p>
@@ -55,3 +63,5 @@ In order to test the performance of the project. You can follow the next steps t
 ```python
   execute notebooks/Baseline_MVTEC_Wide_Resnet.ipynb
 ```
+
+
