@@ -404,7 +404,7 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
                    
                    "image_testing": wandb.Image(fig)})
         
-        save_model(stn_model,model_name='../results/stn_model.pt')
+        save_model(stn_model,model_name='../results/models/stn_model.pt')
 
         if average_val_ssim > best_ssim:
             best_ssim = average_val_ssim
@@ -414,13 +414,11 @@ def start(data_dir ='../data/mvtec_anomaly_detection',batch_size = 32,learning_r
                         'optimizer_state_dict': optimizer.state_dict(),
                         'loss': average_loss,
                         'best_ssim':average_val_ssim
-                    },"../results/checkpoint_best_model.pth")
+                    },"../results/models/checkpoint_best_model.pth")
                 
             artifact = wandb.Artifact(f'best-model_{run.id}.pth', type='model')
-            artifact.add_file("../results/checkpoint_best_model.pth")
+            artifact.add_file("../results/models/checkpoint_best_model.pth")
             run.log_artifact(artifact)
-            #wandb.save("../results/checkpoint_best_model.pth")
-
 
     print("Finished Training")
     run.finish()

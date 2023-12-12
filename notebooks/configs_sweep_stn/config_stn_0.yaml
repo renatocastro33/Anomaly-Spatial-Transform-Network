@@ -21,4 +21,4 @@ parameters:
     values: [0.2,0.1]
 
 #tmux a -t session_00
-#python train_stn_model.py --batch_size=64 --device=0 --l1_weight=0.2 --learning_rate=0.0005 --loss_name=l1_mse --model_name=exp_sweep --num_epochs=1000 --ssim_weight=0.8 --sweep=0
+#python train_stn_model.py --batch_size=32 --device=0 --l1_weight=0.2 --learning_rate=0.0005 --loss_name=l1_mse --model_name=exp_sweep --num_epochs=1 --ssim_weight=0.8 --sweep=0

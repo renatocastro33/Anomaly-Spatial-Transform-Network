@@ -11,30 +11,7 @@ import torch
 import torchvision.transforms as transforms
 from natsort import natsorted
 
-
-class RandomRotation:
-    def __init__(self, degrees):
-        self.degrees = degrees
-
-    def __call__(self, img):
-        angle = random.uniform(-self.degrees, self.degrees)
-        rotated_img = transforms.functional.rotate(img, angle)
-        
-        return rotated_img, angle
-    
-    
-class RandomTranslate:
-    def __init__(self, translate): 
-        self.translate = translate
-
-    def __call__(self, img):
-        horiz_trans = random.uniform(-self.translate[0], self.translate[0]) 
-        vert_trans = random.uniform(-self.translate[1], self.translate[1])
-        
-        translated_img = transforms.functional.affine(img, angle=0, translate=[horiz_trans, vert_trans], scale=1.0, shear=0)
-        
-        return translated_img, [horiz_trans, vert_trans]
-
+from .transformations import *
 
 
 class MVTEC(Dataset):
@@ -61,7 +38,9 @@ class MVTEC(Dataset):
 
       self.rotation = RandomRotation(degrees=45)
       self.translation = RandomTranslate(translate=(0.2, 0.2))
-  
+      self.zoom = RandomZoom(zoom_range=0.2)
+      self.grid_distort = GridDistortion(alpha=50)
+      
     def __len__(self):
         return len(self.data)
 
@@ -74,17 +53,19 @@ class MVTEC(Dataset):
 
         if self.transform:
             img = self.transform(img)
-
+        img.to(self.device)
         if random.random() < 0.5:
           transformed_img, transforms = self.apply_random_transforms(img) 
         else:
           transformed_img, transforms = img, [0,[0,0]]
-        img.to(self.device)
         transformed_img.to(self.device)
+        img.to(self.device)
+
         return transforms, img, transformed_img
     
     def apply_random_transforms(self, img):
-        rotation_img, angle = self.rotation(img)
-        translation_img, trans = self.translation(rotation_img)
-            
-        return translation_img, [angle, trans]
+        img, angle = self.rotation(img)
+        img, trans = self.translation(img)
+        img, zoom_factor = self.zoom(img)
+        img = self.grid_distort(img)  
+        return img, [angle, trans]
