@@ -6,8 +6,6 @@ Anomaly detection, an essential component of industrial quality control and surv
 
 ![Padim_Spatial_Transform_Network](src/images/PaDiM.png)
 
-![Padim_Spatial_Transform_Network](src/images/screw_image_result.png)
-
 # Project based On
 This project is based on the Github PaDiM-Anomaly-Detection-Localization-master: [https://github.com/xiahaifeng1995/PaDiM-Anomaly-Detection-Localization-master/tree/main]
 
@@ -54,16 +52,13 @@ In order to test the performance of the project. You can follow the next steps t
 
 # Test
 
-<p>Command Linux Terminal or Anaconda Prompt for Resnet-18:</p> 
+<p>Command Linux Terminal :</p> 
 
 ```python
-  execute notebooks/Baseline_MVTEC_Resnet18.ipynb
+  execute python train_stn_model.py
 ```
-
-<p>Command Linux Terminal or Anaconda Prompt for Wideresnet:</p> 
-
 ```python
-  execute notebooks/Baseline_MVTEC_Wide_Resnet.ipynb
+  execute python train_padim.py
 ```
 
 
