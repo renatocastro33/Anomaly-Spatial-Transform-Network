@@ -11,3 +11,4 @@ if not os.path.exists(filepath):
 
     with tarfile.open(filepath) as tar:
         tar.extractall(path="")
+    #tar -xvf mvtec_anomaly_detection.tar.xz -C notebooks/data/
