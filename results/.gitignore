@@ -1,5 +1,6 @@
 padim_results/
 
-models/
+models/*.pth
+
 *.pth
 *.pt
