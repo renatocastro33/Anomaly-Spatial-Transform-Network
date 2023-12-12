@@ -52,16 +52,13 @@ In order to test the performance of the project. You can follow the next steps t
 
 # Test
 
-<p>Command Linux Terminal or Anaconda Prompt for Resnet-18:</p> 
+<p>Command Linux Terminal :</p> 
 
 ```python
-  execute notebooks/Baseline_MVTEC_Resnet18.ipynb
+  execute python train_stn_model.py
 ```
-
-<p>Command Linux Terminal or Anaconda Prompt for Wideresnet:</p> 
-
 ```python
-  execute notebooks/Baseline_MVTEC_Wide_Resnet.ipynb
+  execute python train_padim.py
 ```
 
 
