@@ -3,8 +3,9 @@ import torch
 from PIL import Image
 from torchvision import transforms
 from torch.utils.data import Dataset
+import cv2
 
-
+from natsort import natsorted
 
 class MVTecDataset(Dataset):
     
@@ -22,20 +23,24 @@ class MVTecDataset(Dataset):
         self.x, self.y, self.mask = self.load_dataset_folder()
 
         # set transforms
-        self.transform_x = transforms.Compose([transforms.Resize(resize, Image.LANCZOS),
+        self.transform_x = transforms.Compose([transforms.Resize((resize,resize)),
                                       #transforms.CenterCrop(cropsize),
                                       transforms.ToTensor(),
                                       transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                                   std=[0.229, 0.224, 0.225])])
         
-        self.transform_mask = transforms.Compose([transforms.Resize(resize, Image.NEAREST),
+        self.transform_mask = transforms.Compose([transforms.Resize((resize,resize)),
                                          #transforms.CenterCrop(cropsize),
                                          transforms.ToTensor()])
 
     def __getitem__(self, idx):
         x, y, mask = self.x[idx], self.y[idx], self.mask[idx]
 
-        x = Image.open(x).convert('RGB')
+        #x = Image.open(x).convert('RGB')
+        x = cv2.imread(x)
+        x = cv2.cvtColor(x, cv2.COLOR_BGR2RGB)
+        x = Image.fromarray(x)
+
         x = self.transform_x(x)
 
         if y == 0:
@@ -44,6 +49,9 @@ class MVTecDataset(Dataset):
             mask = Image.open(mask)
             mask = self.transform_mask(mask)
 
+        x = x.to("cuda")
+        mask = mask.to("cuda")
+        
         return x, y, mask
 
     def __len__(self):
@@ -57,15 +65,19 @@ class MVTecDataset(Dataset):
         gt_dir = os.path.join(self.dataset_path, self.class_name, 'ground_truth')
 
         img_types = sorted(os.listdir(img_dir))
+        
+        img_types = natsorted(img_types)
+
         for img_type in img_types:
 
             # load images
             img_type_dir = os.path.join(img_dir, img_type)
             if not os.path.isdir(img_type_dir):
                 continue
-            img_fpath_list = sorted([os.path.join(img_type_dir, f)
+            img_fpath_list = natsorted([os.path.join(img_type_dir, f)
                                      for f in os.listdir(img_type_dir)
                                      if f.endswith('.png')])
+            
             x.extend(img_fpath_list)
 
             # load gt labels

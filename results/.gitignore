@@ -1,0 +1,5 @@
+padim_results/
+
+models/
+*.pth
+*.pt

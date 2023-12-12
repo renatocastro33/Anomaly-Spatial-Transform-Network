@@ -1,0 +1,9 @@
+gdown
+torch
+torchvision
+timm
+matplotlib
+scikit-image
+scikit-learn
+wandb
+pytorch_msssim
