@@ -18,6 +18,9 @@ Self-supervised learning Results
 
 ![Self-supervised learning Training](src/images/PY_Results_Image.png)
 
+![Training Leaninrg Curves the Spatial Transfrom Networks](src/images/train_ms_ssim.jpg)
+
+![Validation Leaninrg Curves the Spatial Transfrom Networks](src/images/val_ms_ssim.jpg)
 
 # Requirements
 
